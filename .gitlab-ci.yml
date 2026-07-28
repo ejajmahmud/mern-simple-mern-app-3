@@ -1,0 +1,49 @@
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  BACKEND_IMAGE: simple-mern-backend
+  FRONTEND_IMAGE: simple-mern-frontend
+
+build_backend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $BACKEND_IMAGE .
+
+build_frontend:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker build -t $FRONTEND_IMAGE ./client
+
+test_backend:
+  stage: test
+  image: node:20-alpine
+  script:
+    - npm install
+    - node -c app.js
+
+test_frontend:
+  stage: test
+  image: node:20-alpine
+  script:
+    - cd client
+    - npm install
+    - npm run build
+
+deploy_app:
+  stage: deploy
+  image: docker:24
+  services:
+    - docker:24-dind
+  script:
+    - docker compose up -d --build
+  only:
+    - main
